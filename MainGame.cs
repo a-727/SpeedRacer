@@ -1,12 +1,17 @@
 ﻿#nullable enable
 using System;
 using System.IO;
+using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace SpeedRacer;
 
+public class NoLevelsException : Exception
+{
+    
+}
 public class MainGame : Game
 {
     private int[] _charPos;
@@ -100,11 +105,18 @@ public class MainGame : Game
     {
         try
         {
-            string[] gameCampaigns = Directory.GetDirectories("../../../gameLevels");
+            string[] games = Directory.GetDirectories("../../../t");
+            if (games.Length == 0)
+            {
+                throw new NoLevelsException();
+            }
         }
         catch
         {
-            Console.Write("Sorry, there are no campaigns available to play. Please add a level inside /gameLevels. You should find plenty in ");
+            Console.WriteLine("Sorry, there are no campaigns available to play. Please add a level inside /gameLevels. You should find plenty in https://github.com/a-727/SpeedRacer.");
+            Console.Write("Press enter to continue:");
+            Console.ReadLine();
+            
         }
 
         base.Initialize();

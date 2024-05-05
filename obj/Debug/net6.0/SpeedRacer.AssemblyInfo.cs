@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("SpeedRacer")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+fb43885ba071315ef680f0ede019a78ea7388e0c")]
 [assembly: System.Reflection.AssemblyProductAttribute("SpeedRacer")]
 [assembly: System.Reflection.AssemblyTitleAttribute("SpeedRacer")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
