@@ -1,5 +1,6 @@
 ﻿#nullable enable
 using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using Microsoft.Xna.Framework;
@@ -19,7 +20,7 @@ public class MainGame : Game
     private SpriteBatch? _spriteBatch;
     private BasicEffect? _basicEffect;
     private int[][] _map;
-
+    private Dictionary<string, int> _settings;
     
     public MainGame()
     {
@@ -110,13 +111,17 @@ public class MainGame : Game
             {
                 throw new NoLevelsException();
             }
+            Console.ForegroundColor = ConsoleColor.Magenta;
+            Console.BackgroundColor = ConsoleColor.Black;
+            string toPlay = SelectMenu(games, "What campaign would you like to play?", ConsoleColor.Yellow);
+            
         }
         catch
         {
-            Console.WriteLine("Sorry, there are no campaigns available to play. Please add a level inside /gameLevels. You should find plenty in https://github.com/a-727/SpeedRacer.");
+            Console.WriteLine("Sorry, there are no campaigns available to play. Please add a campaign inside /gameLevels. You should find plenty in https://github.com/a-727/SpeedRacer.");
             Console.Write("Press enter to continue:");
+            Exit();
             Console.ReadLine();
-            
         }
 
         base.Initialize();

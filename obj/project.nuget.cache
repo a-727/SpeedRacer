@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "squ3NLkYeW7rtU+058GqjIGHVcv+37v+DNFQAqFZ2TDpQP+RTxnIfAq2ujSeTcoHELbo7zm7ndMZDIAwW0L1xw==",
+  "dgSpecHash": "YpU+HzPyYdK3NAAgPloLCg3ibFk/HU94YdpBZITbekTNQh/tC3OWaUjfZI1mSCFXsGg6jxAdzfSptZce1+Mc5A==",
   "success": true,
   "projectFilePath": "/Users/grantsd/RiderProjects/SpeedRacer/SpeedRacer.csproj",
   "expectedPackageFiles": [
@@ -12,10 +12,7 @@
     "/Users/grantsd/.nuget/packages/system.drawing-dotnet-core/1.2.3/system.drawing-dotnet-core.1.2.3.nupkg.sha512",
     "/Users/grantsd/.nuget/packages/system.drawing.primitives/4.3.0/system.drawing.primitives.4.3.0.nupkg.sha512",
     "/Users/grantsd/.nuget/packages/system.runtime/4.3.0/system.runtime.4.3.0.nupkg.sha512",
-    "/Users/grantsd/.nuget/packages/system.runtime.extensions/4.3.0/system.runtime.extensions.4.3.0.nupkg.sha512",
-    "/Users/grantsd/.nuget/packages/microsoft.netcore.app.ref/6.0.27/microsoft.netcore.app.ref.6.0.27.nupkg.sha512",
-    "/Users/grantsd/.nuget/packages/microsoft.aspnetcore.app.ref/6.0.27/microsoft.aspnetcore.app.ref.6.0.27.nupkg.sha512",
-    "/Users/grantsd/.nuget/packages/microsoft.netcore.app.host.osx-arm64/6.0.27/microsoft.netcore.app.host.osx-arm64.6.0.27.nupkg.sha512"
+    "/Users/grantsd/.nuget/packages/system.runtime.extensions/4.3.0/system.runtime.extensions.4.3.0.nupkg.sha512"
   ],
   "logs": []
 }
