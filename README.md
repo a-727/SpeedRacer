@@ -48,3 +48,5 @@ Boolean (1 or 0) value, whether to allow easy mode. Default is 1. Cannot disable
 Boolean (1 or 0) value, whether to allow medium mode. Default is 1. Cannot disable this setting, allowEasyMode, allowHardMode, AllowSuperEasyMode (disabled by default), and AllowSuperHardMode (disabled by deafault). If that happens, it will generate a campaign error and reset all to default.
 #### allowHardMode
 Boolean (1 or 0) value, whether to allow hard mode. Default is 1. Cannot disable this setting, allowEasyMode, allowNormalMode, AllowSuperEasyMode (disabled by default), and AllowSuperHardMode (disabled by deafault). If that happens, it will generate a campaign error and reset all to default.
+## Create levels
+Based on your levels selection, create your own levels by editing this google sheet
