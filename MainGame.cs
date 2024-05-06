@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -127,15 +128,19 @@ public class MainGame : Game
 
     protected override void Initialize()
     {
+        List<string> errors = new List<string> ();
         try
         {
-            string[] games = Directory.GetDirectories("../../../levels");
+            string[] fullPathToGames = Directory.GetDirectories("../../../levels");
+            string[] games = new string[fullPathToGames.Length];
+            for (int i = 0; i < fullPathToGames.Length; i++)
+            {
+                games[i] = Path.GetRelativePath("../../../levels", fullPathToGames[i]);
+            }
             if (games.Length == 0)
             {
                 throw new NoLevelsException();
             }
-
-            List<string> errors = new List<string> ();
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.BackgroundColor = ConsoleColor.Black;
             string toPlay = SelectMenu(games, "What campaign would you like to play?", ConsoleColor.Yellow);
@@ -146,7 +151,7 @@ public class MainGame : Game
                 {
                     try
                     {
-                        string[] temp = rawSetting.Split(": ");
+                        string[] temp = rawSetting.Split(" = ");
                         Settings.Add(temp[0], int.Parse(temp[1]));
                     }
                     catch (FormatException e)
@@ -155,7 +160,7 @@ public class MainGame : Game
                     }
                     catch (IndexOutOfRangeException)
                     {
-                        errors.Add($"Your setting ({rawSetting}) does not contain a \": \". Please make sure to add that between the name of the setting and the value");
+                        errors.Add($"Your setting ({rawSetting}) does not contain a \" = \". Please make sure to add that between the name of the setting and the value");
                     }
                     catch (Exception e)
                     {
@@ -167,7 +172,30 @@ public class MainGame : Game
             {
                 errors.Add($"Settings file not found: please make sure levels/{toPlay}/settings.txt exists.");
             }
-            
+            foreach (KeyValuePair<string, int[]> current in DefaultSettings)
+            {
+                if (Settings.ContainsKey(current.Key))
+                {
+                    if (Settings[current.Key] < current.Value[0])
+                    {
+                        errors.Add($"Setting {current.Key} was set to value {Settings[current.Key]}, which was below the minimum value {current.Value[0]}.");
+                        Settings[current.Key] = current.Value[2];
+                    }
+                    else if (Settings[current.Key] > current.Value[1])
+                    {
+                        errors.Add($"Setting {current.Key} was set to value {Settings[current.Key]}, which was above the maximum value {current.Value[1]}.");
+                        Settings[current.Key] = current.Value[2];
+                    }
+                }
+                else
+                {
+                    Settings.Add(current.Key, current.Value[2]);
+                    if (current.Value[3] == 1)
+                    {
+                        errors.Add($"Setting {current.Key} had no value. This setting should be set for every campaign.");
+                    }
+                }
+            }
         }
         catch (NoLevelsException)
         {
@@ -182,7 +210,12 @@ public class MainGame : Game
             Directory.CreateDirectory("../../../levels");
             Initialize();
         }
+        foreach (string i in errors)
+        {
+            Console.WriteLine(i);
+        }
         base.Initialize();
+        Exit();
     }
     
     protected override void LoadContent()
