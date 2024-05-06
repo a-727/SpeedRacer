@@ -216,7 +216,7 @@ public class MainGame : Game
             }
         }
         bool keepGoing = true;
-        AllMaps = new int[][][Settings["!Levels"]];
+        AllMaps = new int[Settings["!Levels"]][][];
         for (int i = 1; (keepGoing && i <= Settings["!Levels"]); i++)
         {
             try
