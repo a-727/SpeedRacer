@@ -21,17 +21,39 @@ public class MainGame : Game
     protected BasicEffect? BasicEffect;
     protected int[][] CurrentMap;
     protected int[][][] AllMaps;
-    protected Dictionary<string, int> Settings = new ();
+    protected Dictionary<string, int> Settings;
+    protected Dictionary<string, int[]> DefaultSettings;
     
     public MainGame()
     {
         Graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
-        CharPos = new [] {50, 50};
-        CurrentMap = new int[][] {};
+        CharPos = [50, 50];
+        Settings = new Dictionary<string, int>();
+        DefaultSettings = SetDefaultValues();
     }
 
+    protected Dictionary<string, int[]> SetDefaultValues()
+    {
+        Dictionary<string, int[]> toReturn = new ();
+        toReturn.Add("!Levels", [1, 100, 5, 1]);
+        toReturn.Add("!xSize", [4, 500, 20, 1]);
+        toReturn.Add("!ySize", [4, 400, 20, 1]);
+        toReturn.Add("PlayerSize", [45, 200, 65, 0]);
+        toReturn.Add("ShowTimer", [0, 1, 1, 0]);
+        toReturn.Add("SaveToLeaderboard", [0, 1, 0, 0]);
+        toReturn.Add("AllowLeaderboardClear", [0, 1, 0, 0]);
+        toReturn.Add("DiffSpeedMultiplier", [10, 100, 25, 0]);
+        toReturn.Add("AllowSuperEasyMode", [0, 1, 0, 0]);
+        toReturn.Add("AllowSuperHardMode", [0, 1, 0, 0]);
+        toReturn.Add("finishedProject", [0, 1, 0, 0]);
+        toReturn.Add("allowEasyMode", [0, 1, 1, 0]);
+        toReturn.Add("allowNormalMode", [0, 1, 1, 0]);
+        toReturn.Add("allowHardMode", [0, 1, 1, 0]);
+        return toReturn;
+    }
+        
     public static string SelectMenu(string[]? options = null, string prompt = "Please select an option:", ConsoleColor highlightOption = ConsoleColor.Blue) //Use arrow keys to select an option from a menu. Console only.
     {
         options ??= new [] { "Yes", "No" };
@@ -145,6 +167,7 @@ public class MainGame : Game
             {
                 errors.Add($"Settings file not found: please make sure levels/{toPlay}/settings.txt exists.");
             }
+            
         }
         catch (NoLevelsException)
         {
@@ -157,6 +180,7 @@ public class MainGame : Game
         {
             Console.WriteLine("The levels directory does not exist. Creating it... You should probably add some campaigns inside /levels - please view https://github.com/a-727/SpeedRacer/blob/main/README.md");
             Directory.CreateDirectory("../../../levels");
+            Initialize();
         }
         base.Initialize();
     }
