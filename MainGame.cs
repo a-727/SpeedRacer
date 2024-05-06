@@ -220,12 +220,12 @@ public class MainGame : Game
         {
             try
             {
-                AllMaps[i] = new int[Settings["xSize"]][];
+                AllMaps[i] = new int[Settings["!xSize"]][];
                 string[] lines = File.ReadAllLines($"../../../levels/{toPlay}/{i}.csv");
-                for (int j = 0; j < Settings["xSize"]; j++)
+                for (int j = 0; j < Settings["!xSize"]; j++)
                 {
-                    AllMaps[i][j] = new int[Settings["ySize"]];
-                    for (int k = 0; k < Settings["ySize"]; k++)
+                    AllMaps[i][j] = new int[Settings["!ySize"]];
+                    for (int k = 0; k < Settings["!ySize"]; k++)
                     {
                         try
                         {
