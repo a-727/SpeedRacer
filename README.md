@@ -32,7 +32,7 @@ Whether to show the timer, in time since the start of the level. Boolean (1 or 0
 #### SaveToLeaderboard
 Allow the user to save their time to local leaderboard. Also determines wether the leaderboard is shown. Boolean (1 or 0) value - default is 0.
 #### AllowLeaderboardClear
-Allow the user to clear the leaderboard. Requires SaveToLeaderboard to be enabled, otherwise will through a campaign error. Boolean (1 or 0) value - default is 0.
+Allow the user to clear the leaderboard. Boolean (1 or 0) value - default is 0.
 #### DiffSpeedMultiplier
 In percentage of blocks, per second. Multiplied by 3-5, depending on the difficulty the user chooses (super easy: 2, easy: 3, medium: 4, hard: 5, super hard:7). Integer value from 10-100. Default is 25.
 #### AllowSuperEasyMode
