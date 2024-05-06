@@ -173,30 +173,6 @@ public class MainGame : Game
             {
                 errors.Add($"Settings file not found: please make sure levels/{toPlay}/settings.txt exists.");
             }
-            foreach (KeyValuePair<string, int[]> current in DefaultSettings)
-            {
-                if (Settings.ContainsKey(current.Key))
-                {
-                    if (Settings[current.Key] < current.Value[0])
-                    {
-                        errors.Add($"Setting {current.Key} was set to value {Settings[current.Key]}, which was below the minimum value {current.Value[0]}.");
-                        Settings[current.Key] = current.Value[2];
-                    }
-                    else if (Settings[current.Key] > current.Value[1])
-                    {
-                        errors.Add($"Setting {current.Key} was set to value {Settings[current.Key]}, which was above the maximum value {current.Value[1]}.");
-                        Settings[current.Key] = current.Value[2];
-                    }
-                }
-                else
-                {
-                    Settings.Add(current.Key, current.Value[2]);
-                    if (current.Value[3] == 1)
-                    {
-                        errors.Add($"Setting {current.Key} had no value. This setting should be set for every campaign.");
-                    }
-                }
-            }
         }
         catch (NoLevelsException)
         {
@@ -214,6 +190,30 @@ public class MainGame : Game
         foreach (string i in errors)
         {
             Console.WriteLine(i);
+        }
+        foreach (KeyValuePair<string, int[]> current in DefaultSettings)
+        {
+            if (Settings.ContainsKey(current.Key))
+            {
+                if (Settings[current.Key] < current.Value[0])
+                {
+                    errors.Add($"Setting {current.Key} was set to value {Settings[current.Key]}, which was below the minimum value {current.Value[0]}.");
+                    Settings[current.Key] = current.Value[2];
+                }
+                else if (Settings[current.Key] > current.Value[1])
+                {
+                    errors.Add($"Setting {current.Key} was set to value {Settings[current.Key]}, which was above the maximum value {current.Value[1]}.");
+                    Settings[current.Key] = current.Value[2];
+                }
+            }
+            else
+            {
+                Settings.Add(current.Key, current.Value[2]);
+                if (current.Value[3] == 1)
+                {
+                    errors.Add($"Setting {current.Key} had no value. This setting should be set for every campaign.");
+                }
+            }
         }
         bool keepGoing = true;
         for (int i = 1; (keepGoing && i <= Settings["Levels"]); i++)
