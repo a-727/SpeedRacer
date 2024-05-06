@@ -106,22 +106,27 @@ public class MainGame : Game
     {
         try
         {
-            string[] games = Directory.GetDirectories("../../../t");
+            string[] games = Directory.GetDirectories("../../../levels");
             if (games.Length == 0)
             {
                 throw new NoLevelsException();
             }
+
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.BackgroundColor = ConsoleColor.Black;
             string toPlay = SelectMenu(games, "What campaign would you like to play?", ConsoleColor.Yellow);
-            
+
         }
-        catch
+        catch (NoLevelsException ex)
         {
-            Console.WriteLine("Sorry, there are no campaigns available to play. Please add a campaign inside /gameLevels. You should find plenty in https://github.com/a-727/SpeedRacer.");
+            Console.WriteLine("Sorry, there are no campaigns available to play. Please add a campaign inside /levels. ");
             Console.Write("Press enter to continue:");
             Exit();
             Console.ReadLine();
+        }
+        catch (DirectoryNotFoundException)
+        {
+            Console.WriteLine("The levels directory does not exist. Creating it... You should probably add some campains inside /levels - please view ");
         }
 
         base.Initialize();
