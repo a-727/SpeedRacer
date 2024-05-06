@@ -126,8 +126,14 @@ public class MainGame : Game
         GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, verticesB, 0, 1);
     }
 
+    protected void DoNothing(string parameter)
+    {
+        
+    }
+    
     protected override void Initialize()
     {
+        string toPlay = "none";
         List<string> errors = new List<string> ();
         try
         {
@@ -143,7 +149,7 @@ public class MainGame : Game
             }
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.BackgroundColor = ConsoleColor.Black;
-            string toPlay = SelectMenu(games, "What campaign would you like to play?", ConsoleColor.Yellow);
+            toPlay = SelectMenu(games, "What campaign would you like to play?", ConsoleColor.Yellow);
             try
             {
                 string[] rawSettings = File.ReadAllLines($"../../../levels/{toPlay}/settings.txt");
@@ -214,8 +220,37 @@ public class MainGame : Game
         {
             Console.WriteLine(i);
         }
+        bool keepGoing = true;
+        for (int i = 1; (keepGoing && i <= Settings["Levels"]); i++)
+        {
+            try
+            {
+                AllMaps[i] = new int[Settings["xSize"]][];
+                string[] lines = File.ReadAllLines($"../../../levels/{toPlay}/{i}.csv");
+                for (int j = 0; j < Settings["xSize"]; j++)
+                {
+                    AllMaps[i][j] = new int[Settings["ySize"]];
+                    try
+                    {
+                        DoNothing(lines[j]);
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        
+                    }
+                    for (int k = 0; k < Settings["ySize"]; k++)
+                    {
+                        
+                    }
+                }
+            }
+            catch (FileNotFoundException)
+            {
+                
+            }
+        }
+        SetupLevel(1);
         base.Initialize();
-        Exit();
     }
     
     protected override void LoadContent()
