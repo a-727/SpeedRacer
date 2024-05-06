@@ -15,12 +15,12 @@ public class NoLevelsException : Exception
 }
 public class MainGame : Game
 {
-    private int[] _charPos;
-    private GraphicsDeviceManager _graphics;
-    private SpriteBatch? _spriteBatch;
-    private BasicEffect? _basicEffect;
-    private int[][] _map;
-    private Dictionary<string, int> _settings;
+    protected int[] _charPos;
+    protected GraphicsDeviceManager _graphics;
+    protected SpriteBatch? _spriteBatch;
+    protected BasicEffect? _basicEffect;
+    protected int[][] _map;
+    protected Dictionary<string, int> _settings;
     
     public MainGame()
     {
@@ -88,7 +88,7 @@ public class MainGame : Game
 
         return options[pos];
         }
-    private void DrawRectangle(float x, float y, float width, float height, Color color) //x and y are positions for the upper-left hand corner.
+    protected void DrawRectangle(float x, float y, float width, float height, Color color) //x and y are positions for the upper-left hand corner.
     {
         VertexPositionColor[] verticesA = new VertexPositionColor[3];
         VertexPositionColor[] verticesB = new VertexPositionColor[3];
@@ -117,7 +117,7 @@ public class MainGame : Game
             string toPlay = SelectMenu(games, "What campaign would you like to play?", ConsoleColor.Yellow);
 
         }
-        catch (NoLevelsException ex)
+        catch (NoLevelsException)
         {
             Console.WriteLine("Sorry, there are no campaigns available to play. Please add a campaign inside /levels. ");
             Console.Write("Press enter to continue:");
@@ -129,7 +129,6 @@ public class MainGame : Game
             Console.WriteLine("The levels directory does not exist. Creating it... You should probably add some campains inside /levels - please view ");
             Directory.CreateDirectory("../../../levels");
         }
-
         base.Initialize();
     }
     
