@@ -15,20 +15,21 @@ public class NoLevelsException : Exception
 }
 public class MainGame : Game
 {
-    protected int[] _charPos;
-    protected GraphicsDeviceManager _graphics;
-    protected SpriteBatch? _spriteBatch;
-    protected BasicEffect? _basicEffect;
-    protected int[][] _map;
-    protected Dictionary<string, int> _settings;
+    protected int[] CharPos;
+    protected GraphicsDeviceManager Graphics;
+    protected SpriteBatch? SpriteBatch;
+    protected BasicEffect? BasicEffect;
+    protected int[][] CurrentMap;
+    protected int[][][] AllMaps;
+    protected Dictionary<string, int> Settings = new ();
     
     public MainGame()
     {
-        _graphics = new GraphicsDeviceManager(this);
+        Graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
-        _charPos = new [] {50, 50};
-        _map = new int[][] {};
+        CharPos = new [] {50, 50};
+        CurrentMap = new int[][] {};
     }
 
     public static string SelectMenu(string[]? options = null, string prompt = "Please select an option:", ConsoleColor highlightOption = ConsoleColor.Blue) //Use arrow keys to select an option from a menu. Console only.
@@ -112,21 +113,49 @@ public class MainGame : Game
                 throw new NoLevelsException();
             }
 
+            List<string> errors = new List<string> ();
             Console.ForegroundColor = ConsoleColor.Magenta;
             Console.BackgroundColor = ConsoleColor.Black;
             string toPlay = SelectMenu(games, "What campaign would you like to play?", ConsoleColor.Yellow);
-
+            try
+            {
+                string[] rawSettings = File.ReadAllLines($"../../../levels/{toPlay}/settings.txt");
+                foreach (string rawSetting in rawSettings)
+                {
+                    try
+                    {
+                        string[] temp = rawSetting.Split(": ");
+                        Settings.Add(temp[0], int.Parse(temp[1]));
+                    }
+                    catch (FormatException e)
+                    {
+                        errors.Add($"Your value for setting ({rawSetting}) is not numerical (cannot be turned into integer): {e}");
+                    }
+                    catch (IndexOutOfRangeException)
+                    {
+                        errors.Add($"Your setting ({rawSetting}) does not contain a \": \". Please make sure to add that between the name of the setting and the value");
+                    }
+                    catch (Exception e)
+                    {
+                        errors.Add($"Setting ({rawSetting}) could not be read: {e}");
+                    }
+                }
+            }
+            catch (FileNotFoundException)
+            {
+                errors.Add($"Settings file not found: please make sure levels/{toPlay}/settings.txt exists.");
+            }
         }
         catch (NoLevelsException)
         {
-            Console.WriteLine("Sorry, there are no campaigns available to play. Please add a campaign inside /levels. ");
+            Console.WriteLine("Sorry, there are no campaigns available to play. Please add a campaign inside /levels. (view https://github.com/a-727/SpeedRacer/blob/main/README.md for more info)");
             Console.Write("Press enter to continue:");
             Exit();
             Console.ReadLine();
         }
         catch (DirectoryNotFoundException)
         {
-            Console.WriteLine("The levels directory does not exist. Creating it... You should probably add some campains inside /levels - please view ");
+            Console.WriteLine("The levels directory does not exist. Creating it... You should probably add some campaigns inside /levels - please view https://github.com/a-727/SpeedRacer/blob/main/README.md");
             Directory.CreateDirectory("../../../levels");
         }
         base.Initialize();
@@ -134,9 +163,9 @@ public class MainGame : Game
     
     protected override void LoadContent()
     {
-        _spriteBatch = new SpriteBatch(GraphicsDevice);
-        _basicEffect = new BasicEffect(GraphicsDevice);
-        _basicEffect.VertexColorEnabled = true;
+        SpriteBatch = new SpriteBatch(GraphicsDevice);
+        BasicEffect = new BasicEffect(GraphicsDevice);
+        BasicEffect.VertexColorEnabled = true;
         // TODO: use this.Content to load your game content here
     }
 
@@ -152,17 +181,17 @@ public class MainGame : Game
 
     protected override void Draw(GameTime gameTime)
     {
-        _basicEffect!.Projection = Matrix.CreateOrthographicOffCenter(0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height, 0, 0, 1);
+        BasicEffect!.Projection = Matrix.CreateOrthographicOffCenter(0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height, 0, 0, 1);
         GraphicsDevice.Clear(Color.CornflowerBlue);
-        foreach (EffectPass pass in _basicEffect.CurrentTechnique.Passes)
+        foreach (EffectPass pass in BasicEffect.CurrentTechnique.Passes)
         {
             pass.Apply();
             DrawRectangle(50, 50, 100, 200, Color.Blue);
             DrawRectangle(150, 250, 400, 35, Color.Yellow);
         }
         // TODO: Add your drawing code here
-        _spriteBatch!.Begin();
-        _spriteBatch.End();
+        SpriteBatch!.Begin();
+        SpriteBatch.End();
         base.Draw(gameTime);
     }
 }
