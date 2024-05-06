@@ -191,7 +191,7 @@ public class MainGame : Game
         {
             Console.WriteLine(i);
         }
-        foreach (KeyValuePair<string, int[]> current in DefaultSettings)
+        foreach (KeyValuePair<string, int[]> current in SetDefaultValues())
         {
             if (Settings.ContainsKey(current.Key))
             {
@@ -216,7 +216,7 @@ public class MainGame : Game
             }
         }
         bool keepGoing = true;
-        for (int i = 1; (keepGoing && i <= Settings["Levels"]); i++)
+        for (int i = 1; (keepGoing && i <= Settings["!Levels"]); i++)
         {
             try
             {
