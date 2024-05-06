@@ -16,15 +16,15 @@ Integer values accept any integer, within reason. If the setting is outside of r
 #### Comments:
 Any line starting with # will be treated as a comment. Lines that cause errors, or that start with anything else than the name of a settings, will also be treated as a comment, although that is not reccomended and WILL be treated as a campaign error - see setting finishedProject (under advanced settings)
 ### Required settings
-NOTE: no settings are technically required, as all have default values. However, these settings not being set will have a campaign error - see setting finishedProject (under advanced settings).
-#### Levels:
+NOTE: no settings are technically required, as all have default values. However, these settings not being set will have a campaign error - see setting finishedProject (under advanced settings). If you are making a mod, please put ! before all required settings
+#### !Levels:
 The number of levels in your game. Accepts integer values 1-100, default is 5.
-#### xSize:
+#### !xSize:
 The width of your game board. This is also the width of the spreadsheet for your levels. Accepts integer values 4-500, default is 20.
-#### ySize:
+#### !ySize:
 The height of your game board. This is also the height of the spreadsheet for your levels. Accepts integer values 4-400, default is 12.
 ### Standard settings
-The normal settings that you should set on later campains, but their default values are okay for begginer campaigns.
+The normal settings that you should set on later campains, but their default values are okay for begginer campaigns. If you are making a mod, please start all standard settings with a capital letter.
 #### PlayerSize
 The size of the player, in percentage of blocks. Accepts integer 45-200 (converted to floats 0.45-2.0) - default is 65.
 #### ShowTimer
@@ -40,8 +40,9 @@ Boolean (1 or 0) value, wether to allow super easy mode (1.5X slower than easy).
 #### AllowSuperHardMode
 Boolean (1 or 0) value, wether to allow super hard mode (1.4X faster than hard). Default is 0.
 ### Advanced Settings
+If you are making a mod, please start all advanced settings with a lowercase letter.
 #### finishedProject
-Boolearn (1 or 0) value, whether the project is completed. If this setting is turned on, instead of displaying campaign errors individually, it will print out a single message "This campagn generated errors during setup. If this is your campaign, please select debug below to view errors and enter debug mode". If no errors are shown, it will disable debug mode (allows super slow speed and pressing space to pause/unpause the game and print out details to console).
+Boolearn (1 or 0) value, whether the project is completed. If this setting is turned on, instead of displaying campaign errors individually, it will print out a single message "This campagn generated errors during setup. If this is your campaign, please select debug below to view errors".
 #### allowEasyMode
 Boolean (1 or 0) value, whether to allow easy mode. Default is 1. Cannot disable this setting, allowNormalMode, allowHardMode, AllowSuperEasyMode (disabled by default), and AllowSuperHardMode (disabled by deafault). If that happens, it will generate a campaign error and reset all to default.
 #### allowNormalMode
