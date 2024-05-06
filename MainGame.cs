@@ -125,11 +125,6 @@ public class MainGame : Game
         GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, verticesA, 0, 1);
         GraphicsDevice.DrawUserPrimitives(PrimitiveType.TriangleList, verticesB, 0, 1);
     }
-
-    protected void DoNothing(string parameter)
-    {
-        
-    }
     
     protected override void Initialize()
     {
@@ -230,14 +225,6 @@ public class MainGame : Game
                 for (int j = 0; j < Settings["xSize"]; j++)
                 {
                     AllMaps[i][j] = new int[Settings["ySize"]];
-                    try
-                    {
-                        DoNothing(lines[j]);
-                    }
-                    catch (IndexOutOfRangeException)
-                    {
-                        
-                    }
                     for (int k = 0; k < Settings["ySize"]; k++)
                     {
                         
