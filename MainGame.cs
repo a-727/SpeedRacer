@@ -127,6 +127,7 @@ public class MainGame : Game
         catch (DirectoryNotFoundException)
         {
             Console.WriteLine("The levels directory does not exist. Creating it... You should probably add some campains inside /levels - please view ");
+            Directory.CreateDirectory("../../../levels");
         }
 
         base.Initialize();
