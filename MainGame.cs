@@ -227,13 +227,27 @@ public class MainGame : Game
                     AllMaps[i][j] = new int[Settings["ySize"]];
                     for (int k = 0; k < Settings["ySize"]; k++)
                     {
-                        
+                        try
+                        {
+                            AllMaps[i][j][k] = int.Parse(lines[j].Split(",")[k]);
+                        }
+                        catch (IndexOutOfRangeException)
+                        {
+                            AllMaps[i][j][k] = 0;
+                            errors.Add($"Cannot find position ({j + 1}, {k + 1}) in csv file for level {i}.");
+                        }
+                        catch (FormatException)
+                        {
+                            AllMaps[i][j][k] = 0;
+                            errors.Add($"In level {i}, at position ({j + 1}, {k + 1}), the value {lines[j].Split(',')[k]} could not be converted to integer. Make sure it is an integer of valid value (0-4 for base game, more for some mods).");
+                        }
                     }
                 }
             }
             catch (FileNotFoundException)
             {
-                
+                errors.Add($"Level {i} (filename: {i}.csv) was not found. Please make sure it exists. The game cannot play if all levels are not found.");
+                Exit();
             }
         }
         SetupLevel(1);
