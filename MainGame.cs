@@ -16,7 +16,7 @@ public class NoLevelsException : Exception
 }
 public class MainGame : Game
 {
-    protected int[] CharPos;
+    protected double[] CharPos;
     protected GraphicsDeviceManager Graphics;
     protected SpriteBatch? SpriteBatch;
     protected BasicEffect? BasicEffect;
@@ -250,5 +250,27 @@ public class MainGame : Game
         SpriteBatch!.Begin();
         SpriteBatch.End();
         base.Draw(gameTime);
+    }
+
+    protected void SetupLevel(int level)
+    {
+        CurrentMap = AllMaps[level];
+        bool toBreak = false;
+        for (int i = 0; i < CurrentMap.Length; i++)
+        {
+            for (int j = 0; j < CurrentMap[i].Length; j++)
+            {
+                if (CurrentMap[i][j] == 3)
+                {
+                    CharPos = [0.5+i-(Settings["xSize"]/200), 0.5+j-(Settings["ySize"]/200)];
+                    toBreak = true;
+                    break;
+                }
+                if (toBreak)
+                {
+                    break;
+                }
+            }
+        }
     }
 }
