@@ -180,6 +180,7 @@ public class MainGame : Game
             Console.Write("Press enter to continue:");
             Exit();
             Console.ReadLine();
+            return;
         }
         catch (DirectoryNotFoundException)
         {
