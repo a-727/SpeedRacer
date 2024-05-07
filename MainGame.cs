@@ -16,14 +16,17 @@ public class NoLevelsException : Exception
 }
 public class MainGame : Game
 {
-    protected double[] CharPos;
+    protected float[] CharPos;
     protected GraphicsDeviceManager Graphics;
     protected SpriteBatch? SpriteBatch;
     protected BasicEffect? BasicEffect;
     protected int[][] CurrentMap;
+    protected float xMovement; //Movement in the x direction by the player, in blocks per second
+    protected float yMovement; //Movement in the y direction by the player, in blocks per second.
     protected int[][][] AllMaps;
     protected Dictionary<string, int> Settings;
     protected Dictionary<string, int[]> DefaultSettings;
+    protected Color[] IntToColor = new[] {Color.White, Color.Black, new Color(0, 255, 0), new Color(255, 0, 255), new Color(255, 0, 0)};
     
     public MainGame()
     {
@@ -38,6 +41,7 @@ public class MainGame : Game
     protected Dictionary<string, int[]> SetDefaultValues()
     {
         Dictionary<string, int[]> toReturn = new ();
+        //At the start settings
         toReturn.Add("!Levels", [1, 100, 5, 1]);
         toReturn.Add("!xSize", [4, 500, 20, 1]);
         toReturn.Add("!ySize", [4, 400, 20, 1]);
@@ -52,6 +56,10 @@ public class MainGame : Game
         toReturn.Add("allowEasyMode", [0, 1, 1, 0]);
         toReturn.Add("allowNormalMode", [0, 1, 1, 0]);
         toReturn.Add("allowHardMode", [0, 1, 1, 0]);
+        //v0.1.0 settings
+        toReturn.Add("AllowDiagonal", [0, 1, 0, 0]);
+        toReturn.Add("CatchupAfterLag", [0, 1, 1, 0]);
+        toReturn.Add("maxMillisecondsPerFrame", [10, 1000, 100, 0]);
         return toReturn;
     }
         
@@ -188,10 +196,6 @@ public class MainGame : Game
             Directory.CreateDirectory("../../../levels");
             Initialize();
         }
-        foreach (string i in errors)
-        {
-            Console.WriteLine(i);
-        }
         foreach (KeyValuePair<string, int[]> current in SetDefaultValues())
         {
             if (Settings.ContainsKey(current.Key))
@@ -222,20 +226,20 @@ public class MainGame : Game
         {
             try
             {
-                AllMaps[i] = new int[Settings["!xSize"]][];
+                AllMaps[i-1] = new int[Settings["!xSize"]][];
                 string[] lines = File.ReadAllLines($"../../../levels/{toPlay}/{i}.csv");
                 for (int j = 0; j < Settings["!xSize"]; j++)
                 {
-                    AllMaps[i][j] = new int[Settings["!ySize"]];
+                    AllMaps[i-1][j] = new int[Settings["!ySize"]];
                     for (int k = 0; k < Settings["!ySize"]; k++)
                     {
                         try
                         {
-                            AllMaps[i][j][k] = int.Parse(lines[j].Split(",")[k]);
+                            AllMaps[i-1][j][k] = int.Parse(lines[k].Split(",")[j]);
                         }
                         catch (IndexOutOfRangeException)
                         {
-                            AllMaps[i][j][k] = 0;
+                            AllMaps[i-1][j][k] = 0;
                             errors.Add($"Cannot find position ({j + 1}, {k + 1}) in csv file for level {i}.");
                         }
                         catch (FormatException)
@@ -254,6 +258,10 @@ public class MainGame : Game
         }
         SetupLevel(1);
         base.Initialize();
+        foreach (string i in errors)
+        {
+            Console.WriteLine(i);
+        }
     }
     
     protected override void LoadContent()
@@ -273,7 +281,19 @@ public class MainGame : Game
 
         base.Update(gameTime);
     }
+    
+    protected float PixelSize(int x_total, int y_total)
+    {
+        float a = (float)Window.ClientBounds.Width / x_total;
+        float b = (float)Window.ClientBounds.Width / y_total;
+        if (a < b)
+        {
+            return a;
+        }
+        return b;
+    }
 
+    
     protected override void Draw(GameTime gameTime)
     {
         BasicEffect!.Projection = Matrix.CreateOrthographicOffCenter(0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height, 0, 0, 1);
@@ -281,10 +301,17 @@ public class MainGame : Game
         foreach (EffectPass pass in BasicEffect.CurrentTechnique.Passes)
         {
             pass.Apply();
-            DrawRectangle(50, 50, 100, 200, Color.Blue);
-            DrawRectangle(150, 250, 400, 35, Color.Yellow);
+            float size = PixelSize(Settings["!xSize"], Settings["!ySize"]);
+            for (int i = 0; i < CurrentMap.Length; i++)
+            {
+                for (int j = 0; j < CurrentMap[i].Length; j++)
+                {
+                    DrawRectangle(i*size, j*size, size, size, IntToColor[CurrentMap[i][j]]);
+                }
+            }
+            float actualPSize = size * (Settings["PlayerSize"]/(float)100);
+            DrawRectangle(CharPos[0] * size, CharPos[1] * size, actualPSize, actualPSize, Color.Blue);
         }
-        // TODO: Add your drawing code here
         SpriteBatch!.Begin();
         SpriteBatch.End();
         base.Draw(gameTime);
@@ -300,7 +327,7 @@ public class MainGame : Game
             {
                 if (CurrentMap[i][j] == 3)
                 {
-                    CharPos = [0.5+i-(Settings["xSize"]/200), 0.5+j-(Settings["ySize"]/200)];
+                    CharPos = [i+(float)0.5-(Settings["PlayerSize"]/(float)200), j+(float)0.5-(Settings["PlayerSize"]/(float)200)];
                     toBreak = true;
                     break;
                 }
