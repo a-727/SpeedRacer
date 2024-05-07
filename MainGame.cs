@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Sockets;
 using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
@@ -17,6 +18,7 @@ public class NoLevelsException : Exception
 public class MainGame : Game
 {
     protected float[] CharPos;
+    protected int DiffMultiplier;
     protected GraphicsDeviceManager Graphics;
     protected SpriteBatch? SpriteBatch;
     protected BasicEffect? BasicEffect;
@@ -25,7 +27,7 @@ public class MainGame : Game
     protected float yMovement; //Movement in the y direction by the player, in blocks per second.
     protected int[][][] AllMaps;
     protected Dictionary<string, int> Settings;
-    protected Dictionary<string, int[]> DefaultSettings;
+    protected List<string> blurbs;
     protected Color[] IntToColor = new[] {Color.White, Color.Black, new Color(0, 255, 0), new Color(255, 0, 255), new Color(255, 0, 0)};
     
     public MainGame()
@@ -35,7 +37,7 @@ public class MainGame : Game
         IsMouseVisible = true;
         CharPos = [50, 50];
         Settings = new Dictionary<string, int>();
-        DefaultSettings = SetDefaultValues();
+        blurbs = DefaultBlurbs();
     }
 
     protected Dictionary<string, int[]> SetDefaultValues()
@@ -61,6 +63,13 @@ public class MainGame : Game
         toReturn.Add("CatchupAfterLag", [0, 1, 1, 0]);
         toReturn.Add("maxMillisecondsPerFrame", [10, 1000, 100, 0]);
         return toReturn;
+    }
+
+    protected List<string> DefaultBlurbs()
+    {
+        return [
+        "v0.1.0 is the first release of the game that draws the console."
+        ];
     }
         
     public static string SelectMenu(string[]? options = null, string prompt = "Please select an option:", ConsoleColor highlightOption = ConsoleColor.Blue) //Use arrow keys to select an option from a menu. Console only.
@@ -258,9 +267,55 @@ public class MainGame : Game
         }
         SetupLevel(1);
         base.Initialize();
-        foreach (string i in errors)
+        List<string> diffOptions = [];
+        if (Settings["AllowSuperEasyMode"] == 1)
         {
-            Console.WriteLine(i);
+            diffOptions.Add("Super Easy");
+        }
+        if (Settings["allowEasyMode"] == 1)
+        {
+            diffOptions.Add("Easy");
+        }
+        if (Settings["allowNormalMode"] == 1)
+        {
+            diffOptions.Add("Medium");
+        }
+        if (Settings["allowHardMode"] == 1)
+        {
+            diffOptions.Add("Hard");
+        }
+        if (Settings["AllowSuperHardMode"] == 1)
+        {
+            diffOptions.Add("Super Hard");
+        }
+        if (diffOptions.Count == 0)
+        {
+            diffOptions = ["Easy", "Medium", "Hard"];
+        }
+        string diffChosen = SelectMenu(diffOptions.ToArray(), "Please select a difficulty");
+        DiffMultiplier = diffChosen switch { "Super Easy" => 2, "Easy" => 3, "Medium" => 4, "Hard" => 5, "Super Hard" => 7, _ => 4 };
+        if (errors.Count == 0) {}
+        else if (Settings["finishedProject"] == 0)
+        {
+            foreach (string i in errors)
+            {
+                Console.WriteLine(i);
+            }
+        }
+        else
+        {
+            Console.Clear();
+            Console.ForegroundColor = ConsoleColor.White;
+            Console.BackgroundColor = 0;
+            Console.Write(
+                "This campagn generated errors during setup. If this is your campaign, please enter debug to view errors (anything else to continue): ");
+            if (Console.ReadLine() == "debug")
+            {
+                foreach (string i in errors)
+                {
+                    Console.WriteLine(i);
+                }
+            }
         }
     }
     
@@ -272,6 +327,24 @@ public class MainGame : Game
         // TODO: use this.Content to load your game content here
     }
 
+    protected bool[] GetCollisions(int numberOfBlocks, int[][]? map = null, float[]? playerPosition = null)
+    {
+        if (map is null)
+        {
+            map = CurrentMap;
+        }
+        if (playerPosition is null)
+        {
+            playerPosition = CharPos;
+        }
+        bool[] toReturn = new bool[numberOfBlocks];
+        toReturn[map[(int)Math.Floor(CharPos[0])][(int)Math.Floor(CharPos[0])]] = true;
+        toReturn[map[(int)Math.Floor(CharPos[0])+1][(int)Math.Floor(CharPos[0])]] = true;
+        toReturn[map[(int)Math.Floor(CharPos[0])][(int)Math.Floor(CharPos[0])+1]] = true;
+        toReturn[map[(int)Math.Floor(CharPos[0])+1][(int)Math.Floor(CharPos[0])+1]] = true;
+        return toReturn;
+    }
+    
     protected override void Update(GameTime gameTime)
     {
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
@@ -292,7 +365,6 @@ public class MainGame : Game
         }
         return b;
     }
-
     
     protected override void Draw(GameTime gameTime)
     {
@@ -319,6 +391,8 @@ public class MainGame : Game
 
     protected void SetupLevel(int level)
     {
+        xMovement = 0;
+        yMovement = 0;
         CurrentMap = AllMaps[level];
         bool toBreak = false;
         for (int i = 0; i < CurrentMap.Length; i++)
