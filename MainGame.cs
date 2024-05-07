@@ -23,8 +23,8 @@ public class MainGame : Game
     protected SpriteBatch? SpriteBatch;
     protected BasicEffect? BasicEffect;
     protected int[][] CurrentMap;
-    protected float xMovement; //Movement in the x direction by the player, in blocks per second
-    protected float yMovement; //Movement in the y direction by the player, in blocks per second.
+    protected float xMovement; //x movement multiplier (-1 for left, 0 for stopped, or 1 for right) - set to half value when bounced.
+    protected float yMovement; //y movement multiplier (-1 for up, 0 for stopped, or 1 for down) - set to half value when bounced.
     protected int[][][] AllMaps;
     protected Dictionary<string, int> Settings;
     protected List<string> blurbs;
@@ -60,15 +60,18 @@ public class MainGame : Game
         toReturn.Add("allowHardMode", [0, 1, 1, 0]);
         //v0.1.0 settings
         toReturn.Add("AllowDiagonal", [0, 1, 0, 0]);
-        toReturn.Add("CatchupAfterLag", [0, 1, 1, 0]);
         toReturn.Add("maxMillisecondsPerFrame", [10, 1000, 100, 0]);
+        //v0.1.1 settings
+        toReturn.Add("AllowPause", [0, 1, 1, 0]);
+        toReturn.Add("pasueClockWithoutMovement", [0, 1, 1, 0]);
         return toReturn;
     }
 
     protected List<string> DefaultBlurbs()
     {
         return [
-        "v0.1.0 is the first release of the game that draws the console."
+        "v0.1.0 is the first release of the game that draws the console.",
+        "Use arrow keys to steer."
         ];
     }
         
@@ -347,11 +350,26 @@ public class MainGame : Game
     
     protected override void Update(GameTime gameTime)
     {
-        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || Keyboard.GetState().IsKeyDown(Keys.Escape))
+        KeyboardState state = Keyboard.GetState();
+        if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || state.IsKeyDown(Keys.Escape))
             Exit();
-
-        // TODO: Add your update logic here
-
+        if (state.IsKeyDown(Keys.Right))
+        {
+            xMovement = 1;
+            if (Settings["AllowDiagonal"] == 0)
+            {
+                yMovement = 0;
+            }
+        }
+        else if (state.IsKeyDown(Keys.Left))
+        {
+            xMovement = -1;
+            if (Settings["AllowDiagonal"] == 0)
+            {
+                yMovement = 0;
+            }
+        }
+        
         base.Update(gameTime);
     }
     
