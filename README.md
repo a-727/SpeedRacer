@@ -26,7 +26,7 @@ The height of your game board. This is also the height of the spreadsheet for yo
 ### Standard settings
 The normal settings that you should set on later campaigns, but their default values are okay for beginner campaigns. If you are making a mod, please start all standard settings with a capital letter.
 #### PlayerSize
-The size of the player, in percentage of blocks. Accepts integer 45-200 (converted to floats 0.45-2.0) - default is 65. Added at the start.
+The size of the player, in percentage of blocks. Accepts integer 25-200 (converted to floats 0.45-2.0) - default is 55. Added at the start.
 #### ShowTimer
 Whether to show the timer, in time since the start of the level. Boolean (1 or 0) value - default is 1. Added at the start.
 #### SaveToLeaderboard
@@ -34,7 +34,7 @@ Allow the user to save their time to local leaderboard. Also determines whether 
 #### AllowLeaderboardClear
 Allow the user to clear the leaderboard. Boolean (1 or 0) value - default is 0. Added at the start.
 #### DiffSpeedMultiplier
-In percentage of blocks, per second. Multiplied by 3-5, depending on the difficulty the user chooses (super easy: 2, easy: 3, medium: 4, hard: 5, super hard:7). Integer value from 10-100. Default is 25. Added at the start.
+In percentage of blocks, per second. Multiplied by 3-5, depending on the difficulty the user chooses (super easy: 2, easy: 3, medium: 4, hard: 5, super hard:7). Integer value from 30-250. Default is 80. Added at the start.
 #### AllowSuperEasyMode
 Boolean (1 or 0) value, whether to allow super easy mode (1.5X slower than easy). Default is 0. Added at the start.
 #### AllowSuperHardMode

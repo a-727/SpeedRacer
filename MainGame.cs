@@ -15,6 +15,53 @@ public class NoLevelsException : Exception
 {
     
 }
+
+public class Clock
+{
+    private int _secs = 0;
+    private int _tenth = 0;
+    private int _hundredth = 0;
+    private double _mili = 0;
+    public Clock(double startingMilliseconds = 0)
+    {
+        IncrementMilliseconds(startingMilliseconds);
+    }
+    public void IncrementSeconds(int by)
+    {
+        _secs += by;
+    }
+    public void IncrementTenths(int by)
+    {
+        _tenth += by;
+        while (_tenth >= 10)
+        {
+            _tenth -= 10;
+            IncrementSeconds(1);
+        }
+    }
+    public void IncrementHundredths(int by)
+    {
+        _hundredth += by;
+        while (_hundredth >= 10)
+        {
+            _hundredth -= 10;
+            IncrementTenths(1);
+        }
+    }
+    public void IncrementMilliseconds(double by)
+    {
+        _mili += by;
+        while (_mili >= 10)
+        {
+            _mili -= 10;
+            IncrementHundredths(1);
+        }
+    }
+    public string View()
+    {
+        return $"{_secs}.{_tenth}{_hundredth}{_mili}";
+    }
+}
 public class MainGame : Game
 {
     protected float[] CharPos;
@@ -28,16 +75,25 @@ public class MainGame : Game
     protected int[][][] AllMaps;
     protected Dictionary<string, int> Settings;
     protected List<string> blurbs;
+    protected int level;
+    protected Clock TimeClock;
+    protected string currentBlurb;
+    protected Random Random;
+    protected bool LastFrameWall = false;
+    private string _versionName = "Speed Racer v0.2.0.0 (Build 31)";
     protected Color[] IntToColor = new[] {Color.White, Color.Black, new Color(0, 255, 0), new Color(255, 0, 255), new Color(255, 0, 0)};
     
     public MainGame()
     {
+        Random = new Random();
         Graphics = new GraphicsDeviceManager(this);
         Content.RootDirectory = "Content";
         IsMouseVisible = true;
         CharPos = [50, 50];
         Settings = new Dictionary<string, int>();
         blurbs = DefaultBlurbs();
+        level = 1;
+        TimeClock = new Clock();
     }
 
     protected Dictionary<string, int[]> SetDefaultValues()
@@ -47,11 +103,11 @@ public class MainGame : Game
         toReturn.Add("!Levels", [1, 100, 5, 1]);
         toReturn.Add("!xSize", [4, 500, 20, 1]);
         toReturn.Add("!ySize", [4, 400, 20, 1]);
-        toReturn.Add("PlayerSize", [45, 200, 65, 0]);
+        toReturn.Add("PlayerSize", [25, 200, 55, 0]);
         toReturn.Add("ShowTimer", [0, 1, 1, 0]);
         toReturn.Add("SaveToLeaderboard", [0, 1, 0, 0]);
         toReturn.Add("AllowLeaderboardClear", [0, 1, 0, 0]);
-        toReturn.Add("DiffSpeedMultiplier", [10, 100, 25, 0]);
+        toReturn.Add("DiffSpeedMultiplier", [30, 250, 80, 0]);
         toReturn.Add("AllowSuperEasyMode", [0, 1, 0, 0]);
         toReturn.Add("AllowSuperHardMode", [0, 1, 0, 0]);
         toReturn.Add("finishedProject", [0, 1, 0, 0]);
@@ -70,8 +126,11 @@ public class MainGame : Game
     protected List<string> DefaultBlurbs()
     {
         return [
-        "v0.1.0 is the first release of the game that draws the console.",
-        "Use arrow keys to steer."
+        "v0.1.0 is the first release of the game that draws the console",
+        "Use arrow keys to steer",
+        "Originally in python",
+        "Don't hit the red (duh)",
+        "Bounce on the walls (black)"
         ];
     }
         
@@ -148,6 +207,7 @@ public class MainGame : Game
     
     protected override void Initialize()
     {
+        Window.Title = $"{_versionName} - Loading";
         string toPlay = "none";
         List<string> errors = new List<string> ();
         try
@@ -332,6 +392,10 @@ public class MainGame : Game
 
     protected bool[] GetCollisions(int numberOfBlocks, int[][]? map = null, float[]? playerPosition = null)
     {
+        if (Keyboard.GetState().IsKeyDown(Keys.Space))
+        {
+            Console.Write("");
+        }
         if (map is null)
         {
             map = CurrentMap;
@@ -341,10 +405,11 @@ public class MainGame : Game
             playerPosition = CharPos;
         }
         bool[] toReturn = new bool[numberOfBlocks];
-        toReturn[map[(int)Math.Floor(CharPos[0])][(int)Math.Floor(CharPos[0])]] = true;
-        toReturn[map[(int)Math.Floor(CharPos[0])+1][(int)Math.Floor(CharPos[0])]] = true;
-        toReturn[map[(int)Math.Floor(CharPos[0])][(int)Math.Floor(CharPos[0])+1]] = true;
-        toReturn[map[(int)Math.Floor(CharPos[0])+1][(int)Math.Floor(CharPos[0])+1]] = true;
+        float pSize = Settings["PlayerSize"]/(float)100;
+        toReturn[map[(int)Math.Floor(CharPos[0])][(int)Math.Floor(CharPos[1])]] = true;
+        toReturn[map[(int)Math.Floor(CharPos[0]+pSize)][(int)Math.Floor(CharPos[1])]] = true;
+        toReturn[map[(int)Math.Floor(CharPos[0])][(int)Math.Floor(CharPos[1]+pSize)]] = true;
+        toReturn[map[(int)Math.Floor(CharPos[0]+pSize)][(int)Math.Floor(CharPos[1]+pSize)]] = true;
         return toReturn;
     }
     
@@ -352,24 +417,102 @@ public class MainGame : Game
     {
         KeyboardState state = Keyboard.GetState();
         if (GamePad.GetState(PlayerIndex.One).Buttons.Back == ButtonState.Pressed || state.IsKeyDown(Keys.Escape))
+        {
             Exit();
-        if (state.IsKeyDown(Keys.Right))
-        {
-            xMovement = 1;
-            if (Settings["AllowDiagonal"] == 0)
-            {
-                yMovement = 0;
-            }
-        }
-        else if (state.IsKeyDown(Keys.Left))
-        {
-            xMovement = -1;
-            if (Settings["AllowDiagonal"] == 0)
-            {
-                yMovement = 0;
-            }
         }
         
+        if (state.IsKeyDown(Keys.Space) && Settings["AllowPause"] == 1)
+        {
+            xMovement = 0;
+            yMovement = 0;
+        }
+        float millisecondsElapsed = gameTime.ElapsedGameTime.Milliseconds;
+        if (millisecondsElapsed > Settings["maxMillisecondsPerFrame"])
+        {
+            millisecondsElapsed = Settings["maxMillisecondsPerFrame"];
+        }
+        float movementMultiplier = millisecondsElapsed*Settings["DiffSpeedMultiplier"]*DiffMultiplier/100000;
+        bool[] check = GetCollisions(5);
+        if (check[4])
+        {
+            SetupLevel(level);
+        }
+        else if (check[2])
+        {
+            level++;
+            try
+            {
+                SetupLevel(level);
+            }
+            catch (IndexOutOfRangeException)
+            {
+                Exit();
+                Console.Clear();
+                Console.ForegroundColor = ConsoleColor.Green;
+                Console.WriteLine("You win!");
+            }
+        }
+        else if (check[1] && !LastFrameWall)
+        {
+            LastFrameWall = true;
+            if (xMovement > 0)
+            {
+                xMovement = (float)-0.5;
+            }
+            else if (xMovement < 0)
+            {
+                xMovement = (float)0.5;
+            }
+
+            if (yMovement > 0)
+            {
+                yMovement = (float)-0.5;
+            }
+            else if (yMovement < 0)
+            {
+                yMovement = (float)0.5;
+            }
+        }
+        else if (!check[1])
+        {
+            LastFrameWall = false;
+            if (state.IsKeyDown(Keys.Right))
+            {
+                xMovement = 1;
+                if (Settings["AllowDiagonal"] == 0)
+                {
+                    yMovement = 0;
+                }
+            }
+            if (state.IsKeyDown(Keys.Left))
+            {
+                xMovement = -1;
+                if (Settings["AllowDiagonal"] == 0)
+                {
+                    yMovement = 0;
+                }
+            }
+            if (state.IsKeyDown(Keys.Up))
+            {
+                yMovement = -1;
+                if (Settings["AllowDiagonal"] == 0)
+                {
+                    xMovement = 0;
+                }
+            }
+            if (state.IsKeyDown(Keys.Down))
+            {
+                yMovement = 1;
+                if (Settings["AllowDiagonal"] == 0)
+                {
+                    xMovement = 0;
+                }
+            }
+        }
+        CharPos[0] += xMovement * movementMultiplier;
+        CharPos[1] += yMovement * movementMultiplier;
+        TitleCard();
+        TimeClock.IncrementMilliseconds(millisecondsElapsed);
         base.Update(gameTime);
     }
     
@@ -411,7 +554,7 @@ public class MainGame : Game
     {
         xMovement = 0;
         yMovement = 0;
-        CurrentMap = AllMaps[level];
+        CurrentMap = AllMaps[level-1];
         bool toBreak = false;
         for (int i = 0; i < CurrentMap.Length; i++)
         {
@@ -429,5 +572,16 @@ public class MainGame : Game
                 }
             }
         }
+        currentBlurb = blurbs[Random.Next(0, blurbs.Count)];
+    }
+
+    protected void TitleCard()
+    {
+        string windowTitle = $"{_versionName} - Level {level} - {currentBlurb}";
+        if (Settings["ShowTimer"] == 1)
+        {
+            windowTitle += $" - {TimeClock.View()}";
+        }
+        Window.Title = windowTitle;
     }
 }
