@@ -1,4 +1,4 @@
 !Levels = 3
 !xSize = 10
 !ySize = 6
-PlayerSize = 60
+PlayerSize = 75
