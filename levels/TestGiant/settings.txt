@@ -1,0 +1,6 @@
+!Levels = 5
+!xSize = 40
+!ySize = 22
+PlayerSize = 179
+DiffSpeedMultiplier = 199
+AllowPause = 0

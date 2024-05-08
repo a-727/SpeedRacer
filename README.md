@@ -26,7 +26,7 @@ The height of your game board. This is also the height of the spreadsheet for yo
 ### Standard settings
 The normal settings that you should set on later campaigns, but their default values are okay for beginner campaigns. If you are making a mod, please start all standard settings with a capital letter.
 #### PlayerSize
-The size of the player, in percentage of blocks. Accepts integer 25-200 (converted to floats 0.45-2.0) - default is 55. Added at the start.
+The size of the player, in percentage of blocks. Accepts integer 25-500 (converted to floats 0.25-5.0) - default is 55. Added at the start.
 #### ShowTimer
 Whether to show the timer, in time since the start of the level. Boolean (1 or 0) value - default is 1. Added at the start.
 #### SaveToLeaderboard
@@ -34,7 +34,7 @@ Allow the user to save their time to local leaderboard. Also determines whether 
 #### AllowLeaderboardClear
 Allow the user to clear the leaderboard. Boolean (1 or 0) value - default is 0. Added at the start.
 #### DiffSpeedMultiplier
-In percentage of blocks, per second. Multiplied by 3-5, depending on the difficulty the user chooses (super easy: 2, easy: 3, medium: 4, hard: 5, super hard:7). Integer value from 30-250. Default is 80. Added at the start.
+In percentage of blocks, per second. Multiplied by 3-5, depending on the difficulty the user chooses (super easy: 2, easy: 3, medium: 4, hard: 5, super hard:7). Integer value from 30-750. Default is 120. Added at the start.
 #### AllowSuperEasyMode
 Boolean (1 or 0) value, whether to allow super easy mode (1.5X slower than easy). Default is 0. Added at the start.
 #### AllowSuperHardMode
@@ -57,6 +57,8 @@ Boolean (1 or 0) value, whether to allow hard mode. Default is 1. Cannot disable
 Integer (10 to 1000) value, the maximum amount of milliseconds of game logic a single frame can portray. Default is 100. Added in v0.1.0
 #### pauseClockWithoutMovement
 Boolean (1 or 0) value, whether to pause the clock if the character is not moving. Default is 1. Added in v0.1.1.
+#### leaderboardPasscode
+Integer (0 to 99999) value, the passcode that is required to reset the leaderboard. If zero, anyone can reset the leaderboard (provided AllowLeaderboardClear is enabled). Default is 0. Added in v0.2.1
 ## Create levels
 Based on your levels selection, create your own levels by editing [this Google sheet (copy first)](https://docs.google.com/spreadsheets/d/1ADEhYx1G8l7nCSyNVLIeS9238DIAQXR2qniKK_8TMD4/copy?usp=sharing). For each level, create a sheet representing the level. 0: air, 1: wall, 2: goal, 3: spawn, 4: danger. 
 ### Save levels

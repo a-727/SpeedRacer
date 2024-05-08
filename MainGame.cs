@@ -2,9 +2,6 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Net.Sockets;
-using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
@@ -15,14 +12,26 @@ public class NoLevelsException : Exception
 {
     
 }
+public class InvalidNameException : Exception
+{
+    
+}
+public class BadLeaderboardException : Exception 
+{
+    
+}
+public class ExitTryException : Exception
+{
+    
+}
 
 public class Clock
 {
     private int _secs = 0;
     private int _tenth = 0;
     private int _hundredth = 0;
-    private double _mili = 0;
-    public Clock(double startingMilliseconds = 0)
+    private long _mili = 0;
+    public Clock(long startingMilliseconds = 0)
     {
         IncrementMilliseconds(startingMilliseconds);
     }
@@ -48,7 +57,7 @@ public class Clock
             IncrementTenths(1);
         }
     }
-    public void IncrementMilliseconds(double by)
+    public void IncrementMilliseconds(long by)
     {
         _mili += by;
         while (_mili >= 10)
@@ -60,6 +69,14 @@ public class Clock
     public string View()
     {
         return $"{_secs}.{_tenth}{_hundredth}{_mili}";
+    }
+    public int GetSeconds()
+    {
+        return _secs;
+    }
+    public long GetMilliseconds()
+    {
+        return _mili + _hundredth * 10 + _tenth * 100 + GetSeconds() * 1000;
     }
 }
 public class MainGame : Game
@@ -78,10 +95,11 @@ public class MainGame : Game
     protected int level;
     protected Clock TimeClock;
     protected string currentBlurb;
+    protected string toPlay = "none";
     protected Random Random;
     protected bool LastFrameWall = false;
-    private string _versionName = "Speed Racer v0.2.0.0 (Build 31)";
-    protected Color[] IntToColor = new[] {Color.White, Color.Black, new Color(0, 255, 0), new Color(255, 0, 255), new Color(255, 0, 0)};
+    protected string _versionName = "Speed Racer v0.2.1.2 (Build 34)";
+    protected Color[] IntToColor = new[] {Color.White, Color.Black, new Color(0, 255, 0), new Color(255, 0, 255), new Color(255, 0, 0), Color.Purple};
     
     public MainGame()
     {
@@ -96,18 +114,18 @@ public class MainGame : Game
         TimeClock = new Clock();
     }
 
-    protected Dictionary<string, int[]> SetDefaultValues()
+    protected virtual Dictionary<string, int[]> SetDefaultValues()
     {
         Dictionary<string, int[]> toReturn = new ();
         //At the start settings
         toReturn.Add("!Levels", [1, 100, 5, 1]);
         toReturn.Add("!xSize", [4, 500, 20, 1]);
         toReturn.Add("!ySize", [4, 400, 20, 1]);
-        toReturn.Add("PlayerSize", [25, 200, 55, 0]);
+        toReturn.Add("PlayerSize", [25, 500, 55, 0]);
         toReturn.Add("ShowTimer", [0, 1, 1, 0]);
         toReturn.Add("SaveToLeaderboard", [0, 1, 0, 0]);
         toReturn.Add("AllowLeaderboardClear", [0, 1, 0, 0]);
-        toReturn.Add("DiffSpeedMultiplier", [30, 250, 80, 0]);
+        toReturn.Add("DiffSpeedMultiplier", [30, 750, 120, 0]);
         toReturn.Add("AllowSuperEasyMode", [0, 1, 0, 0]);
         toReturn.Add("AllowSuperHardMode", [0, 1, 0, 0]);
         toReturn.Add("finishedProject", [0, 1, 0, 0]);
@@ -119,18 +137,25 @@ public class MainGame : Game
         toReturn.Add("maxMillisecondsPerFrame", [10, 1000, 100, 0]);
         //v0.1.1 settings
         toReturn.Add("AllowPause", [0, 1, 1, 0]);
-        toReturn.Add("pasueClockWithoutMovement", [0, 1, 1, 0]);
+        toReturn.Add("pauseClockWithoutMovement", [0, 1, 1, 0]);
+        //v0.2.1 settings
+        toReturn.Add("leaderboardPasscode", [0, 99999, 0, 0]);
         return toReturn;
     }
 
-    protected List<string> DefaultBlurbs()
+    protected virtual List<string> DefaultBlurbs()
     {
         return [
         "v0.1.0 is the first release of the game that draws the console",
         "Use arrow keys to steer",
         "Originally in python",
         "Don't hit the red (duh)",
-        "Bounce on the walls (black)"
+        "Bounce on the walls (black)",
+        "The original campaign is actually the original one",
+        "Easily Moddable (Hopefully)",
+        "Look for new snippets (this thing) every update!",
+        "More options for custom maps! Always!",
+        "Thank you for playing my game"
         ];
     }
         
@@ -191,7 +216,7 @@ public class MainGame : Game
 
         return options[pos];
         }
-    protected void DrawRectangle(float x, float y, float width, float height, Color color) //x and y are positions for the upper-left hand corner.
+    protected virtual void DrawRectangle(float x, float y, float width, float height, Color color) //x and y are positions for the upper-left hand corner.
     {
         VertexPositionColor[] verticesA = new VertexPositionColor[3];
         VertexPositionColor[] verticesB = new VertexPositionColor[3];
@@ -208,7 +233,6 @@ public class MainGame : Game
     protected override void Initialize()
     {
         Window.Title = $"{_versionName} - Loading";
-        string toPlay = "none";
         List<string> errors = new List<string> ();
         try
         {
@@ -252,6 +276,7 @@ public class MainGame : Game
             catch (FileNotFoundException)
             {
                 errors.Add($"Settings file not found: please make sure levels/{toPlay}/settings.txt exists.");
+                Exit();
             }
         }
         catch (NoLevelsException)
@@ -307,17 +332,23 @@ public class MainGame : Game
                     {
                         try
                         {
-                            AllMaps[i-1][j][k] = int.Parse(lines[k].Split(",")[j]);
+                            int x = int.Parse(lines[k].Split(",")[j]);
+                            if (x >= IntToColor.Length)
+                            {
+                                errors.Add($"At position ({j+1}, {k+1}) in csv file for level {i}, the number {x} was greater than the maximum value {IntToColor.Length -1}.");
+                                x = 1;
+                            }
+                            AllMaps[i-1][j][k] = x;
                         }
                         catch (IndexOutOfRangeException)
                         {
-                            AllMaps[i-1][j][k] = 0;
+                            AllMaps[i-1][j][k] = 1;
                             errors.Add($"Cannot find position ({j + 1}, {k + 1}) in csv file for level {i}.");
                         }
                         catch (FormatException)
                         {
-                            AllMaps[i][j][k] = 0;
-                            errors.Add($"In level {i}, at position ({j + 1}, {k + 1}), the value {lines[j].Split(',')[k]} could not be converted to integer. Make sure it is an integer of valid value (0-4 for base game, more for some mods).");
+                            AllMaps[i-1][j][k] = 1;
+                            errors.Add($"In level {i}, at position ({j + 1}, {k + 1}), the value {lines[k].Split(',')[j]} could not be converted to integer. Make sure it is an integer.");
                         }
                     }
                 }
@@ -380,6 +411,9 @@ public class MainGame : Game
                 }
             }
         }
+        Graphics.PreferredBackBufferWidth = 1300;
+        Graphics.PreferredBackBufferHeight = 780;
+        Window.AllowUserResizing = true;
     }
     
     protected override void LoadContent()
@@ -390,7 +424,7 @@ public class MainGame : Game
         // TODO: use this.Content to load your game content here
     }
 
-    protected bool[] GetCollisions(int numberOfBlocks, int[][]? map = null, float[]? playerPosition = null)
+    protected virtual bool[] GetCollisions(int numberOfBlocks, int[][]? map = null, float[]? playerPosition = null)
     {
         if (Keyboard.GetState().IsKeyDown(Keys.Space))
         {
@@ -406,10 +440,17 @@ public class MainGame : Game
         }
         bool[] toReturn = new bool[numberOfBlocks];
         float pSize = Settings["PlayerSize"]/(float)100;
-        toReturn[map[(int)Math.Floor(CharPos[0])][(int)Math.Floor(CharPos[1])]] = true;
-        toReturn[map[(int)Math.Floor(CharPos[0]+pSize)][(int)Math.Floor(CharPos[1])]] = true;
-        toReturn[map[(int)Math.Floor(CharPos[0])][(int)Math.Floor(CharPos[1]+pSize)]] = true;
-        toReturn[map[(int)Math.Floor(CharPos[0]+pSize)][(int)Math.Floor(CharPos[1]+pSize)]] = true;
+        int left = (int)Math.Floor(playerPosition[0]);
+        int right = (int)Math.Floor(playerPosition[0]+pSize);
+        int up = (int)Math.Floor(playerPosition[1]);
+        int down = (int)Math.Floor(playerPosition[1] + pSize);
+        for (int i = left; i <= right; i++)
+        {
+            for (int j = up; j <= down; j++)
+            {
+                toReturn[CurrentMap[i][j]] = true;
+            }
+        }
         return toReturn;
     }
     
@@ -421,18 +462,13 @@ public class MainGame : Game
             Exit();
         }
         
-        if (state.IsKeyDown(Keys.Space) && Settings["AllowPause"] == 1)
-        {
-            xMovement = 0;
-            yMovement = 0;
-        }
         float millisecondsElapsed = gameTime.ElapsedGameTime.Milliseconds;
         if (millisecondsElapsed > Settings["maxMillisecondsPerFrame"])
         {
             millisecondsElapsed = Settings["maxMillisecondsPerFrame"];
         }
         float movementMultiplier = millisecondsElapsed*Settings["DiffSpeedMultiplier"]*DiffMultiplier/100000;
-        bool[] check = GetCollisions(5);
+        bool[] check = GetCollisions(IntToColor.Length);
         if (check[4])
         {
             SetupLevel(level);
@@ -446,10 +482,7 @@ public class MainGame : Game
             }
             catch (IndexOutOfRangeException)
             {
-                Exit();
-                Console.Clear();
-                Console.ForegroundColor = ConsoleColor.Green;
-                Console.WriteLine("You win!");
+                Finish();
             }
         }
         else if (check[1] && !LastFrameWall)
@@ -457,20 +490,20 @@ public class MainGame : Game
             LastFrameWall = true;
             if (xMovement > 0)
             {
-                xMovement = (float)-0.5;
+                xMovement = (float)-0.3;
             }
             else if (xMovement < 0)
             {
-                xMovement = (float)0.5;
+                xMovement = (float)0.3;
             }
 
             if (yMovement > 0)
             {
-                yMovement = (float)-0.5;
+                yMovement = (float)-0.3;
             }
             else if (yMovement < 0)
             {
-                yMovement = (float)0.5;
+                yMovement = (float)0.3;
             }
         }
         else if (!check[1])
@@ -508,18 +541,26 @@ public class MainGame : Game
                     xMovement = 0;
                 }
             }
+            if (state.IsKeyDown(Keys.Space) && Settings["AllowPause"] == 1)
+            {
+                xMovement = 0;
+                yMovement = 0;
+            }
         }
         CharPos[0] += xMovement * movementMultiplier;
         CharPos[1] += yMovement * movementMultiplier;
         TitleCard();
-        TimeClock.IncrementMilliseconds(millisecondsElapsed);
+        if (!(Settings["pauseClockWithoutMovement"] == 1 && xMovement == 0 && yMovement == 0))
+        {
+            TimeClock.IncrementMilliseconds((long)millisecondsElapsed);
+        }
         base.Update(gameTime);
     }
     
-    protected float PixelSize(int x_total, int y_total)
+    protected virtual float PixelSize(int x_total, int y_total)
     {
         float a = (float)Window.ClientBounds.Width / x_total;
-        float b = (float)Window.ClientBounds.Width / y_total;
+        float b = (float)Window.ClientBounds.Height / y_total;
         if (a < b)
         {
             return a;
@@ -530,27 +571,29 @@ public class MainGame : Game
     protected override void Draw(GameTime gameTime)
     {
         BasicEffect!.Projection = Matrix.CreateOrthographicOffCenter(0, GraphicsDevice.Viewport.Width, GraphicsDevice.Viewport.Height, 0, 0, 1);
-        GraphicsDevice.Clear(Color.CornflowerBlue);
+        GraphicsDevice.Clear(Color.Black);
         foreach (EffectPass pass in BasicEffect.CurrentTechnique.Passes)
         {
             pass.Apply();
             float size = PixelSize(Settings["!xSize"], Settings["!ySize"]);
+            float x_offset = (Window.ClientBounds.Width - size*Settings["!xSize"])/2;
+            float y_offset = (Window.ClientBounds.Height - size*Settings["!ySize"])/2;
             for (int i = 0; i < CurrentMap.Length; i++)
             {
                 for (int j = 0; j < CurrentMap[i].Length; j++)
                 {
-                    DrawRectangle(i*size, j*size, size, size, IntToColor[CurrentMap[i][j]]);
+                    DrawRectangle(i*size+x_offset, j*size+y_offset, size, size, IntToColor[CurrentMap[i][j]]);
                 }
             }
             float actualPSize = size * (Settings["PlayerSize"]/(float)100);
-            DrawRectangle(CharPos[0] * size, CharPos[1] * size, actualPSize, actualPSize, Color.Blue);
+            DrawRectangle((CharPos[0] * size)+x_offset, (CharPos[1] * size)+y_offset, actualPSize, actualPSize, Color.Blue);
         }
         SpriteBatch!.Begin();
         SpriteBatch.End();
         base.Draw(gameTime);
     }
 
-    protected void SetupLevel(int level)
+    protected virtual void SetupLevel(int level)
     {
         xMovement = 0;
         yMovement = 0;
@@ -574,8 +617,150 @@ public class MainGame : Game
         }
         currentBlurb = blurbs[Random.Next(0, blurbs.Count)];
     }
-
-    protected void TitleCard()
+    
+    protected virtual  void Finish()
+    {
+        Exit();
+        Console.Clear();
+        Console.ForegroundColor = ConsoleColor.Green;
+        Console.WriteLine($"You win! You completed it in: {TimeClock.View()}");
+        if (Settings["SaveToLeaderboard"] == 1)
+        {
+            string[] leaderboard = [];
+            try
+            {
+                leaderboard = File.ReadAllLines($"../../../levels/{toPlay}/leaderboard.txt");
+            }
+            catch (FileNotFoundException)
+            {
+                leaderboard = [];
+            }
+            string toLeaderboard = SelectMenu(["yes", "no"], $"You win! Would you like to save to leaderboard (time of {TimeClock.View()})?");
+            if (toLeaderboard == "yes")
+            {
+                Console.ForegroundColor = ConsoleColor.White;
+                Console.Write("What is the name for this run?: ");
+                string name = Console.ReadLine();
+                try
+                {
+                    if (!name.Contains(": ") && !name.Contains("\n"))
+                    {
+                        throw new InvalidNameException();
+                    }
+                    long newTime = TimeClock.GetMilliseconds();
+                    bool placed = false;
+                    string[] newLb = new string[leaderboard.Length+1];
+                    for (int i = 0; i < leaderboard.Length; i++)
+                    {
+                        string[] temp = leaderboard[i].Split(": ");
+                        if (temp.Length == 0)
+                        {
+                            File.WriteAllText($"../../../levels/{toPlay}/leaderboard.txt",
+                                $"{name}: {TimeClock.View()}");
+                            throw new ExitTryException();
+                        }
+                        if (temp[0] == "")
+                        {
+                            File.WriteAllText($"../../../levels/{toPlay}/leaderboard.txt",
+                                $"{name}: {TimeClock.View()}");
+                            throw new ExitTryException();
+                        }
+                        if (temp.Length < 2)
+                        {
+                            throw new BadLeaderboardException();
+                        }
+                        string[] temp2 = temp[1].Split(".");
+                        if (temp2.Length < 2)
+                        {
+                            throw new BadLeaderboardException();
+                        }
+                        long existing = int.Parse(temp2[0]) * 1000 + int.Parse(temp2[1]);
+                        if (newTime > existing)
+                        {
+                            //Create new leaderboard, with currentTime and name at this spot. Then exit the for loop.
+                            int j = 0;
+                            while (j < i)
+                            {
+                                newLb[j] = leaderboard[j];
+                                j++;
+                            }
+                            newLb[j] = $"{name}: {TimeClock.View()}";
+                            while (j < leaderboard.Length)
+                            {
+                                newLb[j + 1] = leaderboard[j];
+                            }
+                            break;
+                        }
+                    }
+                    foreach (string line in newLb)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                        Console.BackgroundColor = ConsoleColor.Black;
+                        Console.WriteLine(line);
+                    }
+                    if (Settings["AllowLeaderboardClear"]==0){File.WriteAllLines($"../../../levels/{toPlay}/leaderboard.txt", newLb);}
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Magenta;
+                        string inp = SelectMenu(["No", "Yes (clear everything)"], "Would you like to clear the leaderboard?");
+                        if (inp == "Yes (clear everything)")
+                        {
+                            if (Settings["leaderboardPasscode"] == 0){
+                                string inp2 = SelectMenu(["No - Cancel", "Continue - Clear Everything"], "Are you 100% sure you want to clear the leaderboard?");
+                                if (inp2 == "Continue - Clear Everything")
+                                {
+                                    File.WriteAllText($"../../../levels/{toPlay}/leaderboard.txt", "");
+                                    Console.WriteLine("Leaderboard Cleared!");
+                                }
+                            }
+                            else
+                            {
+                                Console.Write("This leaderboard is protected by a passcode. Enter the passcode to clear it: ");
+                                string inp2 = Console.ReadLine();
+                                int entered;
+                                if (int.TryParse(inp2, out entered))
+                                {
+                                    if (entered == Settings["leaderboardPasscode"])
+                                    {
+                                        File.WriteAllText($"../../../levels/{toPlay}/leaderboard.txt", "");
+                                        Console.WriteLine("Leaderboard Cleared!");
+                                    }
+                                    else
+                                    {
+                                        Console.WriteLine("Invalid passcode");
+                                    }
+                                }
+                                else
+                                {
+                                    Console.WriteLine("We were unable to turn your passcode into  astring.");
+                                }
+                            }
+                        }
+                    }
+                }
+                catch (InvalidNameException)
+                {
+                    Console.WriteLine("Your name can't contain a \": \" or a newline.");
+                }
+                catch (BadLeaderboardException)
+                {
+                    Console.WriteLine("The leaderboard is glitched. Setting the leaderboard to nothing...");
+                    File.WriteAllText($"../../../levels/{toPlay}/leaderboard.txt", "");
+                }
+                catch (ExitTryException)
+                {
+                    Console.WriteLine("You are the first one to place in this leaderboard!");
+                }
+                catch (FormatException)
+                {
+                    Console.WriteLine("The leaderboard is glitched. Setting the leaderboard to nothing...");
+                    File.WriteAllText($"../../../levels/{toPlay}/leaderboard.txt", "");
+                }
+            }
+        }
+    }
+    
+    protected virtual void TitleCard()
     {
         string windowTitle = $"{_versionName} - Level {level} - {currentBlurb}";
         if (Settings["ShowTimer"] == 1)

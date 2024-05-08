@@ -1,2 +1,11 @@
-﻿using var game = new SpeedRacer.MainGame();
-game.Run();
+﻿using SpeedRacer;
+
+public class Program
+{ 
+    public static void Main()
+    {
+        MainGame game = new MainGame();
+        game.Run();
+        
+    }
+}

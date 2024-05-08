@@ -1,0 +1,3 @@
+!xSize = 20
+!ySize = 12
+!Levels = 7
