@@ -1,7 +1,0 @@
-!Levels = 8
-!xSize = 20
-!ySize = 10
-diffSpeedMultiplier = 150
-PlayerSize = 50
-pauseClockWithoutMovement = 0
-AllowPause = 0

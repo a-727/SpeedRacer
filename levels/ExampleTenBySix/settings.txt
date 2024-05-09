@@ -1,5 +1,0 @@
-!Levels = 3
-!xSize = 10
-!ySize = 6
-PlayerSize = 70
-DiffSpeedMultiplier = 70
