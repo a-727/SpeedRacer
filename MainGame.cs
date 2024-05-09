@@ -2,12 +2,17 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Threading;
 using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
 
 namespace SpeedRacer;
 
+public class SameNameException : Exception
+{
+    
+}
 public class NoLevelsException : Exception
 {
     
@@ -98,7 +103,7 @@ public class MainGame : Game
     protected string toPlay = "none";
     protected Random Random;
     protected bool LastFrameWall = false;
-    protected string _versionName = "Speed Racer v0.2.1.2 (Build 34)";
+    protected string _versionName = "Speed Racer v0.2.1.3 (Build 35)";
     protected Color[] IntToColor = new[] {Color.White, Color.Black, new Color(0, 255, 0), new Color(255, 0, 255), new Color(255, 0, 0), Color.Purple};
     
     public MainGame()
@@ -146,7 +151,7 @@ public class MainGame : Game
     protected virtual List<string> DefaultBlurbs()
     {
         return [
-        "v0.1.0 is the first release of the game that draws the console",
+        "Also try Just Shapes & Beats",
         "Use arrow keys to steer",
         "Originally in python",
         "Don't hit the red (duh)",
@@ -155,7 +160,9 @@ public class MainGame : Game
         "Easily Moddable (Hopefully)",
         "Look for new snippets (this thing) every update!",
         "More options for custom maps! Always!",
-        "Thank you for playing my game"
+        "Thank you for playing my game",
+        "Re-Logic helped make this game possible.",
+        "I like Terraria!"
         ];
     }
         
@@ -618,7 +625,7 @@ public class MainGame : Game
         currentBlurb = blurbs[Random.Next(0, blurbs.Count)];
     }
     
-    protected virtual  void Finish()
+    protected virtual void Finish()
     {
         Exit();
         Console.Clear();
@@ -626,7 +633,7 @@ public class MainGame : Game
         Console.WriteLine($"You win! You completed it in: {TimeClock.View()}");
         if (Settings["SaveToLeaderboard"] == 1)
         {
-            string[] leaderboard = [];
+            string[] leaderboard;
             try
             {
                 leaderboard = File.ReadAllLines($"../../../levels/{toPlay}/leaderboard.txt");
@@ -643,26 +650,24 @@ public class MainGame : Game
                 string name = Console.ReadLine();
                 try
                 {
-                    if (!name.Contains(": ") && !name.Contains("\n"))
+                    if (name.Contains(": ") || name.Contains("\n"))
                     {
                         throw new InvalidNameException();
                     }
                     long newTime = TimeClock.GetMilliseconds();
                     bool placed = false;
-                    string[] newLb = new string[leaderboard.Length+1];
+                    List<String> newLb = new();
                     for (int i = 0; i < leaderboard.Length; i++)
                     {
                         string[] temp = leaderboard[i].Split(": ");
                         if (temp.Length == 0)
                         {
-                            File.WriteAllText($"../../../levels/{toPlay}/leaderboard.txt",
-                                $"{name}: {TimeClock.View()}");
+                            File.WriteAllText($"../../../levels/{toPlay}/leaderboard.txt", $"{name}: {TimeClock.View()}");
                             throw new ExitTryException();
                         }
                         if (temp[0] == "")
                         {
-                            File.WriteAllText($"../../../levels/{toPlay}/leaderboard.txt",
-                                $"{name}: {TimeClock.View()}");
+                            File.WriteAllText($"../../../levels/{toPlay}/leaderboard.txt", $"{name}: {TimeClock.View()}");
                             throw new ExitTryException();
                         }
                         if (temp.Length < 2)
@@ -675,22 +680,44 @@ public class MainGame : Game
                             throw new BadLeaderboardException();
                         }
                         long existing = int.Parse(temp2[0]) * 1000 + int.Parse(temp2[1]);
-                        if (newTime > existing)
+                        if (temp[0] == name)
                         {
-                            //Create new leaderboard, with currentTime and name at this spot. Then exit the for loop.
+                            if (newTime < existing)
+                            {
+                                newLb = new List<String>(leaderboard)
+                                {
+                                    [i] = $"{name}: {TimeClock.View()}"
+                                };
+                                placed = true;
+                                break;
+                            }
+                            throw new SameNameException();
+                        }
+                        if (newTime < existing)
+                        {
                             int j = 0;
                             while (j < i)
                             {
-                                newLb[j] = leaderboard[j];
+                                newLb.Add(leaderboard[j]);
                                 j++;
                             }
-                            newLb[j] = $"{name}: {TimeClock.View()}";
+                            newLb.Add($"{name}: {TimeClock.View()}");
                             while (j < leaderboard.Length)
                             {
-                                newLb[j + 1] = leaderboard[j];
+                                if (leaderboard[j].Split(": ")[0] != name)
+                                {
+                                    newLb.Add(leaderboard[j]);
+                                }
+                                j++;
                             }
+                            placed = true;
                             break;
                         }
+                    }
+                    if (!placed)
+                    {
+                        newLb = new List<String>(leaderboard);
+                        newLb.Add($"{name}: {TimeClock.View()}");
                     }
                     foreach (string line in newLb)
                     {
@@ -698,44 +725,18 @@ public class MainGame : Game
                         Console.BackgroundColor = ConsoleColor.Black;
                         Console.WriteLine(line);
                     }
-                    if (Settings["AllowLeaderboardClear"]==0){File.WriteAllLines($"../../../levels/{toPlay}/leaderboard.txt", newLb);}
-                    else
+                    File.WriteAllLines($"../../../levels/{toPlay}/leaderboard.txt", newLb);
+                }
+                catch (SameNameException)
+                {
+                    Console.WriteLine("You have already placed on this leaderboard, and you did not beat your previous score.");
+                    try
                     {
-                        Console.ForegroundColor = ConsoleColor.Magenta;
-                        string inp = SelectMenu(["No", "Yes (clear everything)"], "Would you like to clear the leaderboard?");
-                        if (inp == "Yes (clear everything)")
-                        {
-                            if (Settings["leaderboardPasscode"] == 0){
-                                string inp2 = SelectMenu(["No - Cancel", "Continue - Clear Everything"], "Are you 100% sure you want to clear the leaderboard?");
-                                if (inp2 == "Continue - Clear Everything")
-                                {
-                                    File.WriteAllText($"../../../levels/{toPlay}/leaderboard.txt", "");
-                                    Console.WriteLine("Leaderboard Cleared!");
-                                }
-                            }
-                            else
-                            {
-                                Console.Write("This leaderboard is protected by a passcode. Enter the passcode to clear it: ");
-                                string inp2 = Console.ReadLine();
-                                int entered;
-                                if (int.TryParse(inp2, out entered))
-                                {
-                                    if (entered == Settings["leaderboardPasscode"])
-                                    {
-                                        File.WriteAllText($"../../../levels/{toPlay}/leaderboard.txt", "");
-                                        Console.WriteLine("Leaderboard Cleared!");
-                                    }
-                                    else
-                                    {
-                                        Console.WriteLine("Invalid passcode");
-                                    }
-                                }
-                                else
-                                {
-                                    Console.WriteLine("We were unable to turn your passcode into  astring.");
-                                }
-                            }
-                        }
+                        Console.WriteLine(File.ReadAllText($"../../../levels/{toPlay}/leaderboard.txt"));
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
                     }
                 }
                 catch (InvalidNameException)
@@ -755,6 +756,47 @@ public class MainGame : Game
                 {
                     Console.WriteLine("The leaderboard is glitched. Setting the leaderboard to nothing...");
                     File.WriteAllText($"../../../levels/{toPlay}/leaderboard.txt", "");
+                }
+                if (Settings["AllowLeaderboardClear"] == 1)
+                {
+                    Console.ForegroundColor = ConsoleColor.Magenta;
+                    Thread.Sleep(1000);
+                    string inp = SelectMenu(["No", "Yes (clear everything)"], "Would you like to clear the leaderboard?");
+                    if (inp == "Yes (clear everything)")
+                    {
+                        if (Settings["leaderboardPasscode"] == 0)
+                        {
+                            string inp2 = SelectMenu(["No - Cancel", "Continue - Clear Everything"], "Are you 100% sure you want to clear the leaderboard?");
+                            if (inp2 == "Continue - Clear Everything")
+                            {
+                                File.WriteAllText($"../../../levels/{toPlay}/leaderboard.txt", "");
+                                Console.WriteLine("Leaderboard Cleared!");
+                            }
+                        }
+                        else
+                        {
+                            Console.Write(
+                                "This leaderboard is protected by a passcode. Enter the passcode to clear it: ");
+                            string inp2 = Console.ReadLine();
+                            int entered;
+                            if (int.TryParse(inp2, out entered))
+                            {
+                                if (entered == Settings["leaderboardPasscode"])
+                                {
+                                    File.WriteAllText($"../../../levels/{toPlay}/leaderboard.txt", "");
+                                    Console.WriteLine("Leaderboard Cleared!");
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Invalid passcode");
+                                }
+                            }
+                            else
+                            {
+                                Console.WriteLine("We were unable to turn your passcode into  astring.");
+                            }
+                        }
+                    }
                 }
             }
         }
