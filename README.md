@@ -62,6 +62,6 @@ Integer (0 to 99999) value, the passcode that is required to reset the leaderboa
 ## Create levels
 Based on your levels selection, create your own levels by editing [this Google sheet (copy first)](https://docs.google.com/spreadsheets/d/1ADEhYx1G8l7nCSyNVLIeS9238DIAQXR2qniKK_8TMD4/copy?usp=sharing). For each level, create a sheet representing the level. 0: air, 1: wall, 2: goal, 3: spawn, 4: danger. 
 ### Save levels
-Each level should be exported as a .csv file, with the name <levnum>.csv (replace <levnum> with the level number, in numeric form). Put them in the same folder as your settings.txt file.
+Each level should be exported as a .csv file, with the name \<levnum>.csv (replace \<levnum> with the level number, in numeric form). Put them in the same folder as your settings.txt file.
 ## Play it.
 Move your campaign folder inside the /levels directory in the code for your game. Now you can play.
