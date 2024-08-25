@@ -7,7 +7,7 @@ With a tutorial on how to make campaigns, and lots of campaign settings, and cus
 # Create your own campaigns
 First, create a folder to put your campaign in.
 ## Choose your settings
-Create a file: settings.txt. On each line, please write SettingsName: value (correct capitalization required).
+Create a file: settings.txt. On each line, please write SettingsName = value (correct capitalization required).
 ### Settings type
 #### Boolean:
 Boolean settings are a 1/0 representing true/false. It has to be 1/0 (not True/False) because it maps to a dictionary of string, int values. If the setting is not 1/0 or nonexistent, it will be set to the default value, which depends on the setting - and reported as a campaign error (see setting finishedProject).
